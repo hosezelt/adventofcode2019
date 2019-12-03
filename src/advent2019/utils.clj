@@ -8,4 +8,4 @@
      (->> (io/resource (str "day" day (if part (str "-" part)) ".txt"))
           (slurp)
           (str/split-lines))))
-  
+          
