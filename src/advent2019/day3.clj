@@ -26,14 +26,23 @@
         (map sequence-generator)
         (flatten)
         (move-reducer)
-        (into #{})))
- 
-(defn cross-point [list]
-    (set/intersection (first list) (second list)))
+        ))
+
+(def input (utils/day-file 3))
+(def grid-1 (first (map move-sequence input)))
+(def grid-2 (second (map move-sequence input)))
+
+(def cross-point
+    (set/intersection (set grid-1) (set grid-2)))
+
+(defn step-count [list]
+    (->> list
+        (map #(+ (.indexOf grid-1 %) (.indexOf grid-2 %)))))
 
 (defn dist-orig [point]
     (+ (Math/abs (:x point)) (Math/abs (:y point))))
 
 (defn run []
     (let [input (utils/day-file 3)]
-    {:part1 (apply min (map dist-orig (disj (cross-point (map move-sequence input)) {:x 0 :y 0})))}))
+    {:part1 (apply min (map dist-orig (disj cross-point {:x 0 :y 0})))
+     :part2 (apply min (step-count (disj cross-point {:x 0 :y 0})))}))
