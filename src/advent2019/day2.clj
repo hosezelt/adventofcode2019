@@ -5,7 +5,7 @@
 (defn split-input [input]
     (s/split input #","))
 
-(def instack (into [] (map read-string (split-input (utils/day-file 2)))))
+(def instack (assoc (assoc (into [] (map read-string (split-input (utils/day-file 2)))) 1 12) 2 2))
 
 (defn operation [count stack]
 (let [instr-set (take 4 (drop (* count 4) stack))]
