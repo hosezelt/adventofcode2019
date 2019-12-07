@@ -9,14 +9,23 @@
        (mapv #(mod % 10))
        rseq))
 
-(defn increasing? [numb] (= (sort numb) numb))
+(defn increasing? [n] (= (sort n) n))
 
-(defn multiple? [numb] (apply (complement distinct?) numb))
+(defn multiple? [n] (not= (dedupe n) n))
 
-(defn is-eligible? [numb]
-    (->> (digits numb)
-        increasing?
-        (and multiple?)))
+(defn is-eligible? [n]
+    (and (increasing? n) 
+      (multiple? n)))
+
+(defn pairs? [n]
+  (some #{2} (vals (frequencies n))))
+
+(defn is-elig? [n]
+    (and (increasing? n)
+      (pairs? n)))
 
 (defn run []
-    {:part1 (count (filter is-eligible? (range (:min INPUT) (:max INPUT))))})
+    {:part1 (count (filter is-eligible? (map digits (range (:min INPUT) (:max INPUT)))))
+     :part2 (count (filter is-elig? (map digits (range (:min INPUT) (:max INPUT)))))})
+
+(def map-func (map #(count (filter % (map digits (range (:min INPUT) (:max INPUT))))) [is-elig? is-eligible?]))

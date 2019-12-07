@@ -9,7 +9,6 @@
 
 (defn instack2 [noun verb] (assoc (assoc (into [] (map read-string (split-input (utils/day-file 2)))) 1 noun) 2 verb))
 
-
 (defn operation [stack count]
 (let [instr-set (take 4 (drop count stack))]
     (let [[opcode 
