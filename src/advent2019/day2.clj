@@ -7,19 +7,30 @@
 
 (def instack (assoc (assoc (into [] (map read-string (split-input (utils/day-file 2)))) 1 12) 2 2))
 
-(defn operation [count stack]
-(let [instr-set (take 4 (drop (* count 4) stack))]
+(defn instack2 [noun verb] (assoc (assoc (into [] (map read-string (split-input (utils/day-file 2)))) 1 noun) 2 verb))
+
+
+(defn operation [stack count]
+(let [instr-set (take 4 (drop count stack))]
     (let [[opcode 
            first-param
            second-param
            loc] instr-set]
-    (cond (= 99 opcode) (println (nth stack 0))
+    (cond (= 99 opcode) (reduced stack)
           (= 1 opcode) (assoc stack loc (+ (nth stack first-param) (nth stack second-param)))
           (= 2 opcode) (assoc stack loc (* (nth stack first-param) (nth stack second-param)))
           ))))
 
-(defn compute []
-    (loop [x 0 stack instack]
-       (when (not= (first stack) 99)
-       (recur (inc x) (operation x stack)))))
+(defn compute [noun verb]
+    (first (reduce #(operation %1 %2) (instack2 noun verb) (range 0 (count instack) 4))))
+
+(def variable-input 
+    (let [execs (for [noun (range 100) verb (range 100)] 
+        {:noun noun :verb verb :result (compute noun verb)})
+        exec (first (filter #(= 19690720 (:result %)) execs))] 
+        (+ (* 100 (:noun exec)) (:verb exec))))
+
+(defn run []
+    {:part1 (compute 12 2)
+    :part2 variable-input})
       
