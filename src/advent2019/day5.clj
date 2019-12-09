@@ -17,24 +17,22 @@
 
 (def immediate? #(= 1 %))
 
-(defn operation [[stack itr-ptr]] 
-    (do (println itr-ptr))
-    (let [[op1 op2 mode2 mode1] (utils/digits (nth stack itr-ptr))
-        first-param (get [(nth stack (nth stack (inc itr-ptr))) (nth stack (inc itr-ptr))] (or mode1 0))
-        second-param (get [(nth stack (nth stack (+ itr-ptr 2))) (nth stack (+ itr-ptr 2))] (or mode2 0))
-        loc (nth stack (+ itr-ptr 3) nil)]
-        (println [(nth stack (nth stack (+ itr-ptr 2))) op1 op2 mode2 mode1 first-param second-param loc])
+(defn operation [[stack pointer]] 
+    (let [ptr->val (partial nth stack)
+        [op1 op2 mode1 mode2] (reverse (utils/digits (ptr->val pointer)))
+        first-param (if (= mode1 1) (ptr->val (inc pointer) nil) (ptr->val (ptr->val (inc pointer) nil) nil))
+        second-param (if (= mode2 1) (ptr->val (+ pointer 2) nil) (ptr->val (ptr->val (+ pointer 2) nil) nil))
+        loc (nth stack (+ pointer 3) nil)]
         (cond (= 9 op1) [stack "END"]
-            (= 1 op1) [(assoc stack loc (+ first-param second-param)) (+ itr-ptr 4)]
-            (= 2 op1) [(assoc stack loc (* first-param second-param)) (+ itr-ptr 4)]
-            (= 3 op1) [(assoc stack first-param @in-out) (+ itr-ptr 2)]
-            (= 4 op1) [(do (reset! in-out first-param) stack) (+ itr-ptr 2)]
+            (= 1 op1) [(assoc stack loc (+ first-param second-param)) (+ pointer 4)]
+            (= 2 op1) [(assoc stack loc (* first-param second-param)) (+ pointer 4)]
+            (= 3 op1) [(assoc stack (ptr->val (inc pointer) nil) @in-out) (+ pointer 2)]
+            (= 4 op1) [(do (reset! in-out first-param) stack) (+ pointer 2)]
             )))
 
 (defn compute 
     ([] (compute [(instack) 0]))
     ([[stack itr-ptr]]
-        (println stack)
         (if (= itr-ptr "END")
         (println @in-out)
         (compute (operation [stack itr-ptr])))
