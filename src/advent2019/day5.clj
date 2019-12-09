@@ -15,29 +15,27 @@
 
 (def in-out (atom 1))
 
+(def immediate? #(= 1 %))
+
 (defn operation [[stack itr-ptr]] 
     (do (println itr-ptr))
-    (let [opcode (nth stack itr-ptr)
-        first-param (nth stack (inc itr-ptr) nil)
-        second-param (nth stack (+ itr-ptr 2) nil)
+    (let [[op1 op2 mode2 mode1] (utils/digits (nth stack itr-ptr))
+        first-param (get [(nth stack (nth stack (inc itr-ptr))) (nth stack (inc itr-ptr))] (or mode1 0))
+        second-param (get [(nth stack (nth stack (+ itr-ptr 2))) (nth stack (+ itr-ptr 2))] (or mode2 0))
         loc (nth stack (+ itr-ptr 3) nil)]
-        (cond (= 99 opcode) [stack "END"]
-            (= 1 opcode) [(assoc stack loc (+ (nth stack first-param) (nth stack second-param))) (+ itr-ptr 4)]
-            (= 2 opcode) [(assoc stack loc (* (nth stack first-param) (nth stack second-param))) (+ itr-ptr 4)]
-            (= 3 opcode) [(do (assoc stack first-param @in-out) stack) (+ itr-ptr 2)]
-            (= 4 opcode) [(do (reset! in-out (nth stack first-param)) stack) (+ itr-ptr 2)]
-            (= 1101 opcode) [(assoc stack loc (+ first-param second-param)) (+ itr-ptr 4)]
-            (= 0101 opcode) [(assoc stack loc (+ first-param (nth stack second-param))) (+ itr-ptr 4)]
-            (= 1001 opcode) [(assoc stack loc (+ (nth stack first-param) second-param)) (+ itr-ptr 4)]
-            (= 1102 opcode) [(assoc stack loc (* first-param second-param)) (+ itr-ptr 4)]
-            (= 0102 opcode) [(assoc stack loc (* first-param (nth stack second-param))) (+ itr-ptr 4)]
-            (= 1002 opcode) [(assoc stack loc (* (nth stack first-param) second-param)) (+ itr-ptr 4)]
-            (= 104 opcode) [(do (reset! in-out first-param) stack) (+ itr-ptr 2)]
+        (println [(nth stack (nth stack (+ itr-ptr 2))) op1 op2 mode2 mode1 first-param second-param loc])
+        (cond (= 9 op1) [stack "END"]
+            (= 1 op1) [(assoc stack loc (+ first-param second-param)) (+ itr-ptr 4)]
+            (= 2 op1) [(assoc stack loc (* first-param second-param)) (+ itr-ptr 4)]
+            (= 3 op1) [(assoc stack first-param @in-out) (+ itr-ptr 2)]
+            (= 4 op1) [(do (reset! in-out first-param) stack) (+ itr-ptr 2)]
             )))
 
-(defn compute []
-    (loop [[stack itr-ptr] [(instack) 0]]
-        (if (= itr-ptr "END")
+(defn compute 
+    ([] (compute [(instack) 0]))
+    ([[stack itr-ptr]]
         (println stack)
-        (recur (operation [stack itr-ptr])
-        ))))
+        (if (= itr-ptr "END")
+        (println @in-out)
+        (compute (operation [stack itr-ptr])))
+        ))
