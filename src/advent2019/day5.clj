@@ -7,33 +7,78 @@
 (defn split-input [input]
     (s/split input #","))
 
-(defn instack []
+(defn int-codes []
     (->> INPUT
         split-input
         (map read-string)
         (into [])))
 
-(def in-out (atom 1))
+(def in-out (atom 0))
 
-(def immediate? #(= 1 %))
+(defn parse-opcode [code]
+    (let [x (format "%02d" code)]
+      [(subs x (- (count x) 2))
+       (concat (map #(Integer/parseInt (str %)) (drop 2 (reverse x)))
+               (repeat 0))]))
 
-(defn operation [[stack pointer]] 
-    (let [ptr->val (partial nth stack)
-        [op1 op2 mode1 mode2] (reverse (utils/digits (ptr->val pointer)))
-        first-param (if (= mode1 1) (ptr->val (inc pointer) nil) (ptr->val (ptr->val (inc pointer) nil) nil))
-        second-param (if (= mode2 1) (ptr->val (+ pointer 2) nil) (ptr->val (ptr->val (+ pointer 2) nil) nil))
-        loc (nth stack (+ pointer 3) nil)]
-        (cond (= 9 op1) [stack "END"]
-            (= 1 op1) [(assoc stack loc (+ first-param second-param)) (+ pointer 4)]
-            (= 2 op1) [(assoc stack loc (* first-param second-param)) (+ pointer 4)]
-            (= 3 op1) [(assoc stack (ptr->val (inc pointer) nil) @in-out) (+ pointer 2)]
-            (= 4 op1) [(do (reset! in-out first-param) stack) (+ pointer 2)]
+(defn operation [program pointer]
+    (let [[opcode & parameters] (drop pointer program)
+         [instruction modes] (parse-opcode opcode)
+         get-value (fn [pos]
+            (let [param (nth parameters pos)
+                  mode (nth modes pos)]
+                  (if (= mode 0) (nth program param) 
+                                 param)))]
+        (condp = instruction
+            ;; ADD
+            "01" [(assoc program (nth parameters 2) (+
+                                                        (get-value 0)
+                                                        (get-value 1))) 
+                     (+ pointer 4)]
+            ;; Multiply
+            "02" [(assoc program (nth parameters 2) (* 
+                                                        (get-value 0)
+                                                        (get-value 1))) 
+                     (+ pointer 4)]
+            ;; Store Input
+            "03" [(assoc program (nth parameters 0) @in-out) 
+                     (+ pointer 2)]
+
+            ;; Set Output
+            "04" [(do (reset! in-out (get-value 0)) program) 
+                     (+ pointer 2)]
+
+            ;; Jump if true
+            "05" [program 
+                   (if (not= 0 (get-value 0)) 
+                     (get-value 1) 
+                     (+ pointer 3))]
+
+            ;; Jump if false
+            "06" [program 
+                    (if (= 0 (get-value 0))
+                     (get-value 1) 
+                     (+ pointer 3))]
+
+            ;; Less Than
+            "07" [(assoc program (nth parameters 2) 
+                    (if (< (get-value 0) (get-value 1)) 
+                            1 0)) 
+                     (+ pointer 4)]
+
+            ;; Equal
+            "08" [(assoc program (nth parameters 2) 
+                    (if (= (get-value 0) (get-value 1))
+                            1 0)) 
+                     (+ pointer 4)]
             )))
 
-(defn compute 
-    ([] (compute [(instack) 0]))
-    ([[stack itr-ptr]]
-        (if (= itr-ptr "END")
-        (println @in-out)
-        (compute (operation [stack itr-ptr])))
-        ))
+(defn compute [program input]
+    (reset! in-out input)
+    (loop [program program
+           pointer 0]
+        (if (= (nth program pointer) 99)
+          @in-out
+          (let [[program pos] (operation program pointer)]
+            (recur program pos)))))
+
