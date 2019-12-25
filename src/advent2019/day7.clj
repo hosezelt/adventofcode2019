@@ -33,7 +33,11 @@
 
 (defn system-2 [input phases]
   (let [[a b c d e :as channels] (repeatedly #(a/chan))
-        out                      (a/chan)]
+        log                      (a/chan)
+        out                      (a/chan)
+        multi-chan               (a/mult a)]
+    (a/tap multi-chan log)
+    (a/tap multi-chan out)
     (a/go
       (dorun (map (fn [channel phase] (a/>!! channel phase)) channels phases))
       (a/>!! a 0))
@@ -43,15 +47,15 @@
                    {:program input :in-f #(a/<!! in-chan) :out-f #(a/>!! out-chan %) :pointer 0})
                   (a/close! in-chan)
                   (a/close! out-chan)))
-          [a b c d e]
-          [b c d e out]))
-    (->> (repeatedly #(a/<!! out))
+          [out b c d e]
+          [b   c d e a]))
+    (->> (repeatedly #(a/<!! log))
          (take-while identity)
          last)))
 
-(defn solve-1 []
+(defn solve-2 []
   (let [input (day5/int-codes INPUT)]
     (->> (combo/permutations [9 8 7 6 5])
-         (map #(system-1 input %))
+         (map #(system-2 input %))
          (sort >)
          first)))
