@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<body>
+<script>
+
+const input = `.###..#######..####..##...#
+########.#.###...###.#....#
+###..#...#######...#..####.
+.##.#.....#....##.#.#.....#
+###.#######.###..##......#.
+#..###..###.##.#.#####....#
+#.##..###....#####...##.##.
+####.##..#...#####.#..###.#
+#..#....####.####.###.#.###
+#..#..#....###...#####..#..
+##...####.######....#.####.
+####.##...###.####..##....#
+#.#..#.###.#.##.####..#...#
+..##..##....#.#..##..#.#..#
+##.##.#..######.#..#..####.
+#.....#####.##........#####
+###.#.#######..#.#.##..#..#
+###...#..#.#..##.##..#####.
+.##.#..#...#####.###.##.##.
+...#.#.######.#####.#.####.
+#..##..###...###.#.#..#.#.#
+.#..#.#......#.###...###..#
+#.##.#.#..#.#......#..#..##
+.##.##.##.#...##.##.##.#..#
+#.###.#.#...##..#####.###.#
+#.####.#..#.#.##.######.#..
+.#.#####.##...#...#.##...#.`
+
+ 
+
+const arr = input.split(/\r?\n/)
+
+ 
+
+const grid = arr.map((item) => Array.from(item));
+
+ 
+
+const hasAsteroid = (point) => point === "#" ? true : false;
+
+ 
+
+const asteroid = grid.map((row) => row.map(hasAsteroid))
+
+ 
+
+const points = grid.map((row, y) => row.map((item, x) => {return {x: x, y: y, hasAsteroid: hasAsteroid(item)}}));
+
+ 
+
+const flatten = (arr) => arr.reduce((acc, val) => acc.concat(val), []);
+
+const filter = (arr, fn) => arr.filter(fn);
+
+ 
+
+const asteroids = filter(flatten(points), (ast) => ast.hasAsteroid);
+
+console.log(asteroids);
+
+ 
+
+const delta = asteroids.map(asteroid => asteroids.map((ast) => {return {deltaX: (ast.x -asteroid.x), deltaY: (ast.y - asteroid.y)}}))
+
+ 
+
+ 
+
+function gcd_rec(a, b) {
+
+    if (b) {
+
+        return gcd_rec(b, a % b);
+
+    } else {
+
+        return Math.abs(a);
+
+    }
+
+}
+
+ 
+
+const asteroidLocation = delta.map(item => item.map(del => {return {deltaX: del.deltaX / gcd_rec(del.deltaX, del.deltaY), deltaY: del.deltaY / gcd_rec(del.deltaX, del.deltaY)}}))
+
+console.log(asteroidLocation);
+
+const visibleAsteroids = asteroidLocation.map(asteroidLoc => asteroidLoc.filter((asteroid, index, self) =>
+  index === self.findIndex((t) => (
+    t.deltaX === asteroid.deltaX && t.deltaY === asteroid.deltaY
+  ))
+));
+
+console.log(Math.max(...visibleAsteroids.map(arr => arr.length)));
+
+</script>
+</body>
+ 

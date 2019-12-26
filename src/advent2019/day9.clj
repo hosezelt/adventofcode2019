@@ -1,6 +1,7 @@
 (ns advent2019.day9
   (:require [advent2019.day5 :as day5]
             [advent2019.utils :as utils]))
+
 (defn extend-memory [prog]
   (into prog (repeat 10000 0)))
 
@@ -20,4 +21,3 @@
 
 (defn solve-2 []
   (boost 2))
-

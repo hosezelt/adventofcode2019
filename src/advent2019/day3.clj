@@ -42,6 +42,5 @@
     (+ (Math/abs (:x point)) (Math/abs (:y point))))
 
 (defn run []
-    (let [input (utils/day-file 3)]
     {:part1 (apply min (map dist-orig (disj cross-point {:x 0 :y 0})))
-     :part2 (apply min (step-count (disj cross-point {:x 0 :y 0})))}))
+     :part2 (apply min (step-count (disj cross-point {:x 0 :y 0})))})
